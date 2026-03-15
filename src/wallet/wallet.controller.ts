@@ -7,34 +7,32 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiBody,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { WalletService } from './wallet.service';
 import { WatchWalletDto } from './dto/watch-wallet.dto';
 import { GetTransactionsDto } from './dto/get-transactions.dto';
+import { EvmGuard } from '../blockchain/guards/evm.guard';
 
 @ApiTags('wallet')
 @Controller()
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
+  @UseGuards(EvmGuard)
   @ApiOperation({ summary: 'Get native token balance for a wallet address' })
-  @ApiParam({ name: 'address', description: 'EVM (0x...), Solana (base58), or TON address' })
+  @ApiParam({ name: 'address', description: 'EVM address (0x...)' })
   @ApiResponse({ status: 200, description: 'Balance returned (may be from cache)' })
-  @ApiResponse({ status: 400, description: 'Invalid address' })
+  @ApiResponse({ status: 400, description: 'Invalid address or unsupported network' })
   @Get('wallet/:address/balance')
   getBalance(@Param('address') address: string) {
     return this.walletService.getBalance(address);
   }
 
+  @UseGuards(EvmGuard)
   @ApiOperation({ summary: 'Get recent transactions for a wallet address' })
-  @ApiParam({ name: 'address', description: 'EVM (0x...), Solana (base58), or TON address' })
+  @ApiParam({ name: 'address', description: 'EVM address (0x...)' })
   @ApiResponse({ status: 200, description: 'Transaction list returned (may be from cache)' })
   @Get('wallet/:address/transactions')
   getTransactions(
@@ -44,16 +42,18 @@ export class WalletController {
     return this.walletService.getTransactions(address, Number(query.limit) || 10);
   }
 
-  @ApiOperation({ summary: 'Get ERC-20 / SPL token balances (requires MORALIS_API_KEY)' })
-  @ApiParam({ name: 'address', description: 'EVM (0x...) or Solana (base58) address' })
+  @UseGuards(EvmGuard)
+  @ApiOperation({ summary: 'Get ERC-20 token balances (requires MORALIS_API_KEY)' })
+  @ApiParam({ name: 'address', description: 'EVM address (0x...)' })
   @ApiResponse({ status: 200, description: 'Token balances returned' })
   @Get('wallet/:address/tokens')
   getTokenBalances(@Param('address') address: string) {
     return this.walletService.getTokenBalances(address);
   }
 
-  @ApiOperation({ summary: 'Get NFTs owned by a wallet — EVM via Moralis, Solana via Metaplex' })
-  @ApiParam({ name: 'address', description: 'EVM (0x...) or Solana (base58) address' })
+  @UseGuards(EvmGuard)
+  @ApiOperation({ summary: 'Get NFTs owned by a wallet via Moralis' })
+  @ApiParam({ name: 'address', description: 'EVM address (0x...)' })
   @ApiResponse({ status: 200, description: 'NFT list returned' })
   @Get('wallet/:address/nfts')
   getNfts(@Param('address') address: string) {
@@ -70,6 +70,7 @@ export class WalletController {
     return this.walletService.watchWallet(dto);
   }
 
+  @UseGuards(EvmGuard)
   @ApiOperation({ summary: 'Get all watched wallets with their current balances' })
   @ApiResponse({ status: 200, description: 'Watched wallets with balances' })
   @Get('wallets/watched')

@@ -6,6 +6,7 @@ import { Web3Provider } from './providers/web3.provider';
 import { TonProvider } from './providers/ton.provider';
 import { MoralisProvider } from './providers/moralis.provider';
 import { MetaplexProvider } from './providers/metaplex.provider';
+import { EvmGuard } from './guards/evm.guard';
 
 @Module({
   imports: [ConfigModule],
@@ -16,6 +17,7 @@ import { MetaplexProvider } from './providers/metaplex.provider';
     TonProvider,
     MoralisProvider,
     MetaplexProvider,
+    EvmGuard,
   ],
   exports: [
     EvmProvider,
@@ -24,6 +26,7 @@ import { MetaplexProvider } from './providers/metaplex.provider';
     TonProvider,
     MoralisProvider,
     MetaplexProvider,
+    EvmGuard,
   ],
 })
 export class BlockchainModule {}
